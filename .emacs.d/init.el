@@ -1,7 +1,7 @@
 ;;; -*- lexical-binding: t -*-
 
 ;;; 言語設定
-(set-language-environment "UTF-8")
+(set-language-environment "Japanese")
 (set-default-coding-systems 'utf-8-unix)
 (prefer-coding-system 'utf-8)
 
@@ -10,7 +10,8 @@
   (progn
     (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
     (package-refresh-contents)
-    (package-initialize)))
+    (package-initialize))
+  )
 
 ;;; w32-ime, tr-ime [MELPA]
 (use-package tr-ime
@@ -18,7 +19,14 @@
   (tr-ime-advanced-install)
   (setq default-input-method "W32-IME")
   (w32-ime-initialize)
-  (wrap-function-to-control-ime 'universal-argument nil)
+  (w32-ime-wrap-function-to-control-ime 'universal-argument)
+  (w32-ime-wrap-function-to-control-ime 'read-string)
+  (w32-ime-wrap-function-to-control-ime 'read-char)
+  (w32-ime-wrap-function-to-control-ime 'read-from-minibuffer)
+  (w32-ime-wrap-function-to-control-ime 'y-or-n-p)
+  (w32-ime-wrap-function-to-control-ime 'yes-or-no-p)
+  (w32-ime-wrap-function-to-control-ime 'map-y-or-n-p)
+  (w32-ime-wrap-function-to-control-ime 'register-read-with-preview)
   )
 
 ;;; 矩形選択モード(C-RET で開始。C-z,C-x,C-c,C-v は設定しない)
@@ -36,6 +44,51 @@
   :config
   (editorconfig-mode 1))
 
+;;; markdown-mode
+(use-package markdown-mode
+  :mode
+  (("\\.\\(?:md\\|markdown\\|mkd\\|mdown\\|mkdn\\|mdwn\\)\\'" . gfm-mode))
+  )
+
+;;; orderless, vertico, consult, marginalia
+(use-package orderless
+  :config
+  (setq completion-styles '(orderless)))
+
+(use-package vertico
+  :config
+  (setq vertico-count 20)
+  (vertico-mode))
+
+(use-package marginalia
+  :config
+  (marginalia-mode))
+
+(use-package consult
+  :bind
+  (("C-x b" . consult-buffer))
+  )
+
+;;; denote
+(use-package denote-menu)
+
+(use-package denote
+  :hook (dired-mode . denote-dired-mode)
+  :bind
+  (("C-c n n" . denote)
+   ("C-c n d" . list-denotes)
+   ("C-c n l" . denote-link)
+   ("C-c n b" . denote-backlinks))
+  :config
+  (setq my-denote-directory-env (or (getenv "OneDriveCommercial") (getenv "OneDrive") (getenv "HOME") (getenv "USERPROFILE")))
+  (setq denote-directory (expand-file-name "Applications/notes" my-denote-directory-env))
+  (setq my-denote-subdirectory-name (expand-file-name (format-time-string "%Y/%m") denote-directory))
+  (unless (file-directory-p my-denote-subdirectory-name)
+    (make-directory my-denote-subdirectory-name t))
+  (setq denote-use-directory my-denote-subdirectory-name)
+  (setq denote-file-type 'markdown-yaml)
+  )
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -47,8 +100,9 @@
  '(cua-mode t)
  '(make-backup-files nil)
  '(package-selected-packages
-   '(consult consult-denote denote denote-markdown denote-menu orderless
-             tr-ime w32-ime))
+   '(cmake-mode consult consult-denote denote denote-markdown denote-menu
+		edit-indirect marginalia markdown-mode orderless
+		tr-ime vertico w32-ime))
  '(tool-bar-mode nil))
 
 (custom-set-faces
